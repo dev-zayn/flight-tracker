@@ -1,4 +1,4 @@
-package dev.zayn.flight_tracker.flight_tracker
+package dev.flight.tracker
 
 import io.flutter.embedding.android.FlutterActivity
 

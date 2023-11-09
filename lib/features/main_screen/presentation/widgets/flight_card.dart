@@ -1,11 +1,11 @@
 import 'package:flight_tracker/core/constant/responsive.dart';
 import 'package:flight_tracker/core/theme/colors.dart';
+import 'package:flight_tracker/core/time.dart';
 import 'package:flight_tracker/features/main_screen/domain/entities/ariplane_entity.dart';
 import 'package:flight_tracker/injectable_config.dart';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-import '../../../../core/time.dart';
 import '../bloc/main_bloc.dart';
 import 'planes_sheet.dart';
 import 'ticket_clipper.dart';
@@ -81,13 +81,21 @@ class FlightCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     IconButton(
-                        onPressed: () {
+                      onPressed: () {
+                        mainBloc.add(BookmarkAirplanesEvent(airplane));
+                        if (!mainBloc.bookmarked.contains(airplane)) {
                           sendNotificationToAllDevices(airplane);
-                          mainBloc.add(BookmarkAirplanesEvent(airplane));
-                        },
-                        icon: Icon(mainBloc.bookmarked.contains(airplane)
+                        }
+                      },
+                      icon: Icon(
+                        mainBloc.bookmarked.contains(airplane)
                             ? Icons.bookmark
-                            : Icons.bookmark_border)),
+                            : Icons.bookmark_border,
+                        color: mainBloc.bookmarked.contains(airplane)
+                            ? kcSuccess
+                            : kcGray,
+                      ),
+                    ),
                     Container(
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
@@ -177,22 +185,18 @@ class FlightCard extends StatelessWidget {
   void sendNotificationToAllDevices(AirPlaneEntity airPlaneEntity) async {
     final status = await OneSignal.shared.getDeviceState();
     final String? osUserID = status?.userId;
-    // final userID = osUserID.toString();
-    // print(
-    //     ' AppDateUtils is ${AppDateUtils.yyyyMMddHHmmssFormat(airplane.departure?.scheduledTime)}');
     var notification = OSCreateNotification(
-      content: "Your flight ${airplane.flightNumber} content",
-      heading: "Your notification heading",
+      content:
+          "Your flight ${airplane.flightNumber} estimated time is ${AppDateUtils.yyyyMMddHHmmssFormat(airplane.departure?.scheduledTime)}",
+      heading:
+          "Your flight ${airplane.flightNumber} will take off in 10 minutes",
       playerIds: [
         osUserID!,
       ],
-      // sendAfter: DateTime.now(),
       delayedOption: OSCreateNotificationDelayOption.timezone,
-      // deliveryTimeOfDay: "2023-11-09 02:57",
-      // deliveryTimeOfDay: "2023-11-09 02:57",
-      deliveryTimeOfDay:
-          AppDateUtils.yyyyMMddHHmmssFormat(airplane.departure?.scheduledTime),
-      // sendAfter: DateTime.now(),
+      deliveryTimeOfDay: "2023-11-09 05:17",
+      // deliveryTimeOfDay:
+      //     AppDateUtils.yyyyMMddHHmmssFormat(airplane.departure?.scheduledTime?.subtract(const Duration(minutes: 10))),
     );
     await OneSignal.shared.postNotification(notification);
   }

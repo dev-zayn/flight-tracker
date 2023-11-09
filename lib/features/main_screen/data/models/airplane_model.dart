@@ -42,4 +42,26 @@ class AirPlaneModel extends AirPlaneEntity {
       flightNumber: json['flight']['number'],
     );
   }
+//   ToJson method
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'flight_date': flightDate,
+      'flight_status': flightStatus,
+      'departure': {
+        'airport': departure?.airport,
+        'scheduled': departure?.scheduledTime?.toIso8601String(),
+        'estimated': departure?.estimatedTime?.toIso8601String(),
+        'actual': departure?.actualTime?.toIso8601String(),
+      },
+      'arrival': {
+        'airport': arrival?.airport,
+        'scheduled': arrival?.scheduledTime?.toIso8601String(),
+        'estimated': arrival?.estimatedTime?.toIso8601String(),
+        'actual': arrival?.actualTime?.toIso8601String(),
+      },
+      'airline': {'name': airline},
+      'flight': {'number': flightNumber},
+    };
+  }
 }

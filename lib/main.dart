@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:responsive_framework/breakpoint.dart';
 import 'package:responsive_framework/responsive_breakpoints.dart';
 
@@ -19,6 +20,7 @@ void main() {
       (OSNotificationReceivedEvent event) {
     event.complete(event.notification);
   });
+  Permission.notification.request();
   runApp(const FlightApp());
 }
 

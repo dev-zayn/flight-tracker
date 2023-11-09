@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../domain/use_cases/main_usecase.dart';
@@ -51,12 +53,20 @@ class MainBloc extends Bloc<MainEvent, MainState> {
   GoogleMapController? gmc;
   MainBloc(this.getAirportsUseCases, this.getAirplanesUseCases)
       : super(MainInitial()) {
-    on<MainEvent>((event, emit) {});
+    on<MainEvent>((event, emit) async {
+      // restore data from shared prefrences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      List<String>? jsonData = prefs.getStringList('bookmarked');
+      if (jsonData != null) {
+        _bookmarked = jsonData
+            .map((e) => AirPlaneEntity.fromJson(json.decode(e)))
+            .toList();
+      }
+    });
     on<DetermineCurrentLocationEvent>((event, emit) async {
       emit(DetermineCurrentLocationLoading());
       try {
         final data = await determinePosition();
-        print(' currentPosition $data');
         if (data is String) {
           if (data == 'Location services are disabled') {
             emit(DetermineCurrentLocationIsDisabled(data));
@@ -103,26 +113,46 @@ class MainBloc extends Bloc<MainEvent, MainState> {
       emit(SearchAirplanesLoading());
       try {
         for (var airplane in _airplanes) {
-          // if (airplane.flightStatus
-          //             ?.toLowerCase()
-          //             .contains(searchController.text.toLowerCase()) ==
-          //         true ||
-          //     airplane.flightNumber
-          //             ?.toLowerCase()
-          //             .contains(searchController.text.toLowerCase()) ==
-          //         true ||
-          //     airplane.departure?.airport
-          //             ?.toLowerCase()
-          //             .contains(searchController.text.toLowerCase()) ==
-          //         true ||
-          //     airplane.arrival?.airport
-          //             ?.toLowerCase()
-          //             .contains(searchController.text.toLowerCase()) ==
-          //         true) {
-          //   _searchResualt.add(airplane);
-          // } else {
-          //   _searchResualt.clear();
-          // }
+          if (airplane.flightStatus
+                      ?.toLowerCase()
+                      .contains(searchController.text.toLowerCase()) ==
+                  true ||
+              airplane.flightNumber
+                      ?.toLowerCase()
+                      .contains(searchController.text.toLowerCase()) ==
+                  true ||
+              airplane.departure?.airport
+                      ?.toLowerCase()
+                      .contains(searchController.text.toLowerCase()) ==
+                  true ||
+              airplane.arrival?.airport
+                      ?.toLowerCase()
+                      .contains(searchController.text.toLowerCase()) ==
+                  true) {
+            _searchResualt.add(airplane);
+          } else {
+            _searchResualt.clear();
+            if (airplane.flightStatus
+                        ?.toLowerCase()
+                        .contains(searchController.text.toLowerCase()) ==
+                    true ||
+                airplane.flightNumber
+                        ?.toLowerCase()
+                        .contains(searchController.text.toLowerCase()) ==
+                    true ||
+                airplane.departure?.airport
+                        ?.toLowerCase()
+                        .contains(searchController.text.toLowerCase()) ==
+                    true ||
+                airplane.arrival?.airport
+                        ?.toLowerCase()
+                        .contains(searchController.text.toLowerCase()) ==
+                    true) {
+              _searchResualt.add(airplane);
+            } else {
+              _searchResualt.clear();
+            }
+          }
           if (airplane.flightStatus
                   ?.toLowerCase()
                   .contains(searchController.text.toLowerCase()) ==
@@ -141,10 +171,58 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     on<BookmarkAirplanesEvent>((event, emit) async {
       emit(BookmarkAirplanesLoading());
       try {
-        if (bookmarked.contains(event.airplane) == false) {
-          bookmarked.add(event.airplane);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (_bookmarked.contains(event.airplane) == false) {
+          _bookmarked.add(event.airplane);
+          List<Map<String, dynamic>> jsonData = _bookmarked
+              .map((e) => AirPlaneEntity(
+                    flightDate: e.flightDate,
+                    flightStatus: e.flightStatus,
+                    departure: FlightStatusInfo(
+                      airport: e.departure?.airport,
+                      scheduledTime: e.departure?.scheduledTime,
+                      estimatedTime: e.departure?.estimatedTime,
+                      actualTime: e.departure?.actualTime,
+                    ),
+                    arrival: FlightStatusInfo(
+                      airport: e.arrival?.airport,
+                      scheduledTime: e.arrival?.scheduledTime,
+                      estimatedTime: e.arrival?.estimatedTime,
+                      actualTime: e.arrival?.actualTime,
+                    ),
+                    airline: e.airline,
+                    flightNumber: e.flightNumber,
+                  ).toJson())
+              .toList()
+              .cast<Map<String, dynamic>>();
+          prefs.setStringList(
+              'bookmarked', jsonData.map((e) => json.encode(e)).toList());
         } else {
-          bookmarked.remove(event.airplane);
+          _bookmarked.remove(event.airplane);
+          prefs.remove('bookmarked');
+          List<Map<String, dynamic>> jsonData = _bookmarked
+              .map((e) => AirPlaneEntity(
+                    flightDate: e.flightDate,
+                    flightStatus: e.flightStatus,
+                    departure: FlightStatusInfo(
+                      airport: e.departure?.airport,
+                      scheduledTime: e.departure?.scheduledTime,
+                      estimatedTime: e.departure?.estimatedTime,
+                      actualTime: e.departure?.actualTime,
+                    ),
+                    arrival: FlightStatusInfo(
+                      airport: e.arrival?.airport,
+                      scheduledTime: e.arrival?.scheduledTime,
+                      estimatedTime: e.arrival?.estimatedTime,
+                      actualTime: e.arrival?.actualTime,
+                    ),
+                    airline: e.airline,
+                    flightNumber: e.flightNumber,
+                  ).toJson())
+              .toList()
+              .cast<Map<String, dynamic>>();
+          prefs.setStringList(
+              'bookmarked', jsonData.map((e) => json.encode(e)).toList());
         }
         emit(BookmarkAirplanesSuccess());
       } catch (e) {
