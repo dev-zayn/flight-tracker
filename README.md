@@ -1,16 +1,10 @@
 # flight_tracker
 
-A new Flutter project.
 
 ## Getting Started
+To run this app on your local machine, you need to have Flutter installed on your machine. If you don't have Flutter installed, you can follow the instructions [here](https://flutter.dev/docs/get-started/install) to install it.
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+https://github.com/dev-zayn/flight-tracker/assets/38259126/8fe05bdf-533b-4665-a306-5ee715e4420c
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
